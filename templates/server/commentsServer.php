@@ -1,0 +1,49 @@
+<?php
+require( "config.php" );
+if(isset($_POST['message'])) {
+    $parent = (int)$_POST['parent'];
+    $message = $_POST['message'];
+    $user = $_POST['user'];
+    $user = User::getByName($user);
+
+    $comment = new Comment;
+    $comment->parent = $parent;
+    $comment->message = $message;
+    $comment->user_id = $user->id;
+    $comment->insert();
+    populate_shoutbox();
+}
+
+
+if(isset($_POST['refresh'])) {
+    populate_shoutbox();
+}
+
+function populate_shoutbox() {
+    $parent = (int)$_POST['parent'];
+    $comments = Comment::getListByCarID($parent);
+    $html = "";
+    $html .= '<ul>';
+    foreach ($comments['results'] as $comment) {
+        if(!$comment->shown)
+            continue;
+        $user = User::getById($comment->user_id);
+        $comment = (array)$comment;
+        $html .= '<li>';
+        $html .= '<div class = "comment">';
+        $html .= '<div>';
+        $html .=  '<span class="name">'.$user->name.'</span>';
+        $html .= '</div>';
+        $html .= '<div>';
+        $html .= '<span class="message">'.$comment['message'].'</span>';
+        $html .= '</div>';
+        $html .= '<div>';
+        $html .= '<span class="date">'.date("d.m.Y H:i", strtotime($comment['date_time'])).'</span>';
+        $html .= '</div>';
+        $html .= '</div>';
+        $html .= '</li>';
+    }
+    $html .= '</ul>';
+    echo $html;
+}
+?>
